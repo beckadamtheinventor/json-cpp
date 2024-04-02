@@ -9,12 +9,12 @@ int main(int argc, char **argv) {
 	// deserialize the C string "data" into a JSON object
 	JSON::JSON obj = JSON::JSON::deserialize(data);
 	// create a JSON Array starting with 8 members, and assign to the "messages" key of JSON object "obj"
-	JSONArray *arr = new JSONArray(8);
+	JSON::JSONArray *arr = new JSON::JSONArray(8);
 	for (int i=0; i<8; i++) {
-		arr->get(i).setString("Hello World");
+		arr->append(JSON::JSON("Hello World"));
 	}
-	obj["messages"] = arr;
-	printf("%s\n", obj.serialize());
+	obj["messages"]->setArray(arr);
+	printf("%s\n\n", obj.serialize());
 	return 0;
 }
 ```
@@ -36,37 +36,57 @@ A JSON Object.
 A JSON Array.
 
 
-## JSON Static Methods
+## Static Methods
 
-`JSON::JSON::deserialize`
+`JSON::JSON JSON::deserialize(const char *s);`
 
-De-serialize a JSON string into a JSON Value. (`JSON::JSON`)
+`JSON::JSON JSON::deserialize(std::string s);`
+
+De-serialize a JSON string into a JSON Value.
+
+
+## JSONArray Class Operator Methods
+
+`JSON *operator[](size_t i)`
+
+Return a pointer to the JSON Value at the specified index of this JSON Array. Returns NULL if index is outside the bounds of the array.
+
+`JSON *operator+=(JSON object)`
+
+Append the JSON Value to this JSON Array and return a pointer to it.
+
+
+## JSONArray Class Methods
+
+`void remove(size_t i);`
+
+Remove the JSON Value at the specified index of this JSON Array.
 
 
 ## JSON Class Operator Methods
 
 `JSON *operator[](size_t i)`
 
-Return a pointer to the JSON value at the specified index of this JSON Array. Returns NULL if not a JSON Array.
+Return a pointer to the JSON Value at the specified index of this JSON Array. Returns NULL if not a JSON Array.
 
 `JSON *operator[](std::string key)`
 
-Return a pointer to the JSON value at the specified key of this JSON Object. Returns NULL if not a JSON Object.
+Return a pointer to the JSON Value at the specified key of this JSON Object. Returns NULL if not a JSON Object.
 
 `JSON *operator[](char *key)`
 
-Return a pointer to the JSON value at the specified key of this JSON Object. Returns NULL if not a JSON Object.
+Return a pointer to the JSON Value at the specified key of this JSON Object. Returns NULL if not a JSON Object.
 
 
 ## JSON Class Methods
 
 `const char *serialize();`
 
-Serialize a JSON value into a JSON string.
+Serialize a JSON Value into a JSON string.
 
 `Type getType();`
 
-Return the type associated with this JSON value.
+Return the type associated with this JSON Value.
 
 `bool contains(const char *key);` 
 

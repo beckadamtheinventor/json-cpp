@@ -68,11 +68,12 @@ namespace JSON {
                 members = newmembers;
                 allocated = size;
             }
-            void append(JSON object) {
+            JSON *append(JSON object) {
                 if (length + 1 >= allocated) {
                     resize(allocated + MIN_ALLOC);
                 }
-                members[length++] = object;
+                members[length] = object;
+				return &members[length++];
             }
             void remove(size_t i) {
                 if (i < length) {
@@ -92,8 +93,8 @@ namespace JSON {
             JSON *operator[](size_t i) {
                 return get(i);
             }
-            void operator+=(JSON object) {
-                append(object);
+            JSON *operator+=(JSON object) {
+                return append(object);
             }
         };
         private:
@@ -330,7 +331,7 @@ namespace JSON {
                     break;
                 case Type::Object:
                     size_t len = value.o->Length();
-                    o.reserve(len*8);
+                    o.reserve(len*6);
                     o.append("{");
                     for (size_t i=0; i<len; i++) {
                         o.append("\"");
@@ -528,9 +529,18 @@ namespace JSON {
         }
 
     };
+	typedef JSON::JSON::JSONArray JSONArray;
+	typedef HashedSymList::HashedSymList<JSON> JSONObject;
+
+    static JSON deserialize(const char *s) {
+        return JSON::deserialize(s);
+    }
+
+    static JSON deserialize(std::string s) {
+        return JSON::deserialize(s.c_str());
+    }
 
 }
 
-typedef HashedSymList::HashedSymList<JSON::JSON> JSONObject;
 
 #endif
