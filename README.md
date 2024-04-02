@@ -3,7 +3,8 @@
 Licensed GPLv3. See `LICENSE.txt`.
 
 Basic usage example:
-```
+```cpp
+
 int main(int argc, char **argv) {
 	const char *data = "{\"hello\": \"world\"}";
 	// deserialize the C string "data" into a JSON object
@@ -18,6 +19,7 @@ int main(int argc, char **argv) {
 	printf("%s\n\n", obj.serialize());
 	return 0;
 }
+
 ```
 
 ## Classes
