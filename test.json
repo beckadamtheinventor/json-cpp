@@ -1,0 +1,10 @@
+{
+    "hello": "world",
+    "foo": "bar",
+    "number": 100,
+    "float": 3.69,
+    "empty array": [],
+    "object": {
+        "bar": "foo"
+    }
+}
