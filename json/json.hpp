@@ -8,6 +8,16 @@
 #define JSONMap HashedSymList<JSON>
 
 namespace JSON {
+    static char *dupcstr(const char *s) {
+        if (s == NULL) {
+            return NULL;
+        }
+        char *r = (char*) malloc(strlen(s)+1);
+        if (r != NULL) {
+            strcpy(r, s);
+        }
+        return r;
+    }
     template<class V>
     class HashedSymList {
         constexpr static const size_t MIN_NUM_ENTRIES = 10;
@@ -119,10 +129,10 @@ namespace JSON {
         }
 
         long long FindSymIndex(const char *key) {
-            uint32_t hash = Hash(key);
+            size_t hash = Hash(key);
             for (size_t i = 0; i < max_entries; i++) {
-                if (entries[i].key != nullptr) {
-                    if (entries[i].hash == hash) {
+                if (entries[i].hash == hash) {
+                    if (entries[i].key != nullptr) {
                         if (!strcmp(entries[i].key, key)) {
                             return i;
                         }
@@ -587,17 +597,6 @@ namespace JSON {
             char c = data[i++];
             skipspace(data, i);
             return c;
-        }
-
-        static char *dupcstr(const char *s) {
-            if (s == NULL) {
-                return NULL;
-            }
-            char *r = (char*) malloc(strlen(s)+1);
-            if (r != NULL) {
-                strcpy(r, s);
-            }
-            return r;
         }
 
         static JSON deserialize(const char *data, size_t& i) {
