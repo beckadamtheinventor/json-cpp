@@ -3,9 +3,6 @@
 
 #include <csignal>
 #include <cstring>
-#include <exception>
-#include <map>
-#include <string.h>
 #include <string>
 
 #define JSONMap HashedSymList<JSON>
@@ -41,6 +38,7 @@ namespace JSON {
                 hash = sym.hash;
                 key = sym.key;
                 value = sym.value;
+                return *this;
             }
             V& operator=(const V& val) {
                 value = val;
@@ -160,7 +158,7 @@ namespace JSON {
             return n;
         }
 
-        Symbol& Get(size_t i) {
+        Symbol& FindSym(size_t i) {
             for (size_t j = 0; j < max_entries; j++) {
                 if (entries[j].key != nullptr) {
                     if (i == 0) {
@@ -181,12 +179,20 @@ namespace JSON {
         }
 
         const char *Keys(size_t i) {
-            return Get(i).key;
+            return FindSym(i).key;
+        }
+
+        V& Get(size_t i) {
+            return FindSym(i).value;
         }
 
         V& Values(size_t i) {
-            return Get(i).value;
+            return FindSym(i).value;
         }
+
+		V& Get(const char *key) {
+			return FindSym(key).value;
+		}
 		
 		V& Values(const char *key) {
 			return FindSym(key).value;
@@ -526,7 +532,10 @@ namespace JSON {
                     for (size_t i=0; i<value.a->length; i++) {
                         o.append(value.a->get(i)->serialize());
                         if (i+1<value.a->length) {
-                            o.append(",\n");
+                            o.append(",");
+                            if (value.a->get(i)->getType() == Type::Array || value.a->get(i)->getType() == Type::Object) {
+                                o.append("\n");
+                            }
                         }
                     }
                     o.append("]");
@@ -569,7 +578,7 @@ namespace JSON {
             }
         }
         static void skipspace(const char *data, size_t &i) {
-            while (data[i] == ' ' || data[i] == '\t' || data[i] == '\n') {
+            while (data[i] == ' ' || data[i] == '\t' || data[i] == '\n' || data[i] == ',') {
                 i++;
             }
         }
@@ -593,12 +602,8 @@ namespace JSON {
 
         static JSON deserialize(const char *data, size_t& i) {
             JSON o;
-            char c = data[i];
-            if (c == ',') {
-                c = data[++i];
-            }
             skipspace(data, i);
-            c = data[i];
+            char c = data[i];
             if (c >= 'a' && c <= 'z') {
                 if (!strcmp(&data[i], "null")) {
                     o.setNull();
@@ -609,15 +614,14 @@ namespace JSON {
                 } else {
                     o.setNull();
                 }
-            } else if (c >= '0' && c <= '9') {
+            } else if (c >= '0' && c <= '9' || c == '-') {
                 size_t j;
                 bool flt = false;
                 bool neg = false;
                 bool hex = false;
-                if (data[i] == '-') {
+                if (c == '-') {
                     neg = true;
-                    i++;
-                    c = data[i];
+                    c = data[++i];
                 }
                 if (c == '0' && data[i+1] == 'x') {
                     hex = true;
@@ -700,20 +704,26 @@ namespace JSON {
                 } while (c != '"');
                 o.setString(dupcstr(s.c_str()));
             } else if (c == '[') {
-                JSONArray a;
-                c = data[++i];
+                JSONArray *a = new JSONArray();
+                i++;
                 skipspace(data, i);
+                c = data[i];
                 while (c != ']') {
+                    skipspace(data, i);
                     JSON j = deserialize(data, i);
-                    a.append(j);
-                    c = nextchar(data, i);
+                    a->append(j);
+                    skipspace(data, i);
+                    c = data[i];
                 }
+                i++;
                 o.setArray(a);
             } else if (c == '{') {
-                JSONMap a;
-                c = data[++i];
+                JSONMap *a = new JSONMap();
+                i++;
                 skipspace(data, i);
+                c = data[i];
                 while (c != '}') {
+                    skipspace(data, i);
                     const char *key = deserialize(data, i).getCString();
                     if (data[i] == ':') {
                         i++;
@@ -722,9 +732,11 @@ namespace JSON {
                     if (data[i] == ':') {
                         i++;
                     }
-                    a.Add(dupcstr(key), deserialize(data, i));
-                    c = nextchar(data, i);
+                    a->Add(dupcstr(key), deserialize(data, i));
+                    skipspace(data, i);
+                    c = data[i];
                 }
+                i++;
                 o.setObject(a);
             }
             return o;
